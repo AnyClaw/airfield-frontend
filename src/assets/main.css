@@ -4,6 +4,7 @@
 }
 
 body {
-    background: #54b1d6;
-    background: radial-gradient(circle, rgba(84, 177, 214, 1) 0%, rgba(91, 222, 167, 1) 75%);
+    /* background: #54b1d6;
+    background: radial-gradient(circle, rgba(84, 177, 214, 1) 0%, rgba(91, 222, 167, 1) 75%); */
+    background-color: rgb(240, 240, 240);
 }
