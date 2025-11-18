@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import Planes from '../views/Planes.vue'
 import Auth from '../views/Auth.vue'
+import PlaneInfo from '../views/PlaneInfo.vue'
 
 const routes = [
   {
@@ -10,9 +11,14 @@ const routes = [
     component: Planes
   },
   {
-    path: '/auth',
-    name: 'Auth',
+    path: '/login',
+    name: 'Login',
     component: Auth
+  },
+  {
+    path: '/planes/:id/:plane',
+    name: 'PlaneInfo',
+    component: PlaneInfo,
   }
 ]
 
