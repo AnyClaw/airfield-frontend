@@ -5,6 +5,7 @@ import axios from 'axios';
 import Header from '@/components/Header.vue';
 
 const airplanes = ref([])
+const isError = ref(false)
 
 const getAirplanes = async () => {
   try {
@@ -14,8 +15,9 @@ const getAirplanes = async () => {
       }
     })
     airplanes.value = response.data
+    isError.value = false
   } catch (error) {
-    alert(error)
+    isError.value = true
   }
 }
 
@@ -26,12 +28,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <Header />
+  <Header/>
 
   <div class="planes">
-    <div class="plane-card" v-for="plane in airplanes" :key="plane.id">
+    <div v-if="!isError" class="plane-card" v-for="plane in airplanes" :key="plane.id">
       {{ plane.name }}
     </div>
+
+    <div v-else class="error">Сервер временно недоступен</div>
   </div>
 </template>
 
@@ -48,5 +52,10 @@ onMounted(() => {
   margin-bottom: 20px;
   padding: 5px;
   border: 2px solid silver;
+}
+
+.error {
+  display: flex;
+  justify-content: center;
 }
 </style>

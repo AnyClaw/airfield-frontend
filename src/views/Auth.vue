@@ -7,10 +7,11 @@ import Header from '@/components/Header.vue';
 const login = ref('')
 const password = ref('')
 const isLoading = ref(false)
+const errorMessage = ref('')
 
 async function auth() {
     if (!login.value || !password.value) {
-        alert('Заполните все поля')
+        errorMessage.value = 'Заполните все поля'
         return
     }
 
@@ -23,22 +24,26 @@ async function auth() {
         })
 
         localStorage.setItem('authToken', response.data.token)
+        errorMessage.value = ''
 
+        //TODO redirect
         alert('Успешная авторизация!')
     } catch(error) {
-        alert(error)
+        errorMessage.value = error.response.data
         isLoading.value = false
     }
 }
 </script>
 
 <template>
-    <Header />
+    <Header/>
     <main>
         <div class="content">
+            <div class="center">Вход</div>
             <input v-model="login" placeholder="Логин">
             <input v-model="password" placeholder="Пароль">
-            <div class="button-section">
+            <div v-show="errorMessage.length > 0" class="center" style="margin-bottom: 10px;">{{ errorMessage }}</div>
+            <div class="center">
                 <button @click="auth" :disabled="isLoading">Войти</button>
             </div>
         </div>
@@ -69,7 +74,7 @@ input {
     padding: 5px;
 }
 
-.button-section {
+.center {
     width: 100%;
     display: flex;
     justify-content: center;
