@@ -1,9 +1,14 @@
 <script setup>
+import { useRouter } from 'vue-router'
+
 const user = localStorage.getItem('authToken')
+
+const router = useRouter()
 
 function exit() {
     localStorage.removeItem('authToken')
     alert("Вы вышли из системы")
+    location.reload()
 }
 </script>
 
