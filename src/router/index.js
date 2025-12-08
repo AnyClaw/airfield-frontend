@@ -18,7 +18,7 @@ const routes = [
     component: Login
   },
   {
-    path: '/planes/:id/:plane',
+    path: '/planes/:id/',
     name: 'PlaneInfo',
     component: PlaneInfo,
   },

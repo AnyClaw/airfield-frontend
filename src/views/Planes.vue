@@ -26,7 +26,7 @@ async function getAirplanes() {
 
 async function goToPlaneInfo(plane) {
   const data = JSON.stringify(plane)
-  router.push({name: 'PlaneInfo', params: {id: plane.id, plane: data}})
+  router.push({name: 'PlaneInfo', params: {id: plane.id}})
 }
 
 onMounted(() => {
