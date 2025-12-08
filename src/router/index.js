@@ -5,6 +5,7 @@ import Login from '../views/Login.vue'
 import PlaneInfo from '../views/PlaneInfo.vue'
 import Register from '@/views/Register.vue'
 import PilotProfile from '@/views/PilotProfile.vue'
+import RentalForm from '@/views/RentalForm.vue'
 
 const routes = [
   {
@@ -31,6 +32,11 @@ const routes = [
     path: '/profile',
     name: 'Profile',
     component: PilotProfile
+  },
+  {
+    path: '/rental/:id',
+    name: 'NewRental',
+    component: RentalForm
   }
 ]
 

@@ -1,11 +1,12 @@
 <script setup>
 import axios from 'axios';
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import Header from '@/components/Header.vue';
 import { onMounted, ref } from 'vue';
 
 const route = useRoute()
+const router = useRouter()
 
 const isLoading = ref(true)
 const plane = ref(null)
@@ -28,7 +29,18 @@ async function getPlane() {
 function getFuel() {
     if (plane.value.fuel === 0) return `${plane.value.fuel} л. (необходима заправка)`
 
-    return `${plane.fuel} л.`
+    return `${plane.value.fuel} л.`
+}
+
+function getCondition() {
+    if (plane.value.condition === 'POOR') return `${plane.value.condition} (необходимо ТО)`
+    if (plane.value.condition === 'FAIR') return `${plane.value.condition} (рекомендуется ТО)`
+
+    return plane.value.condition
+}
+
+function rent() {
+    router.push({name: 'NewRental', params: {id: plane.value.id}})
 }
 
 onMounted(() => {
@@ -41,24 +53,24 @@ onMounted(() => {
     <main v-if="!isLoading">
         <section class="name-section">
             <h1>{{ plane.name }}</h1>
-            <span>свободен</span>
+            <span>{{ plane.isAvailable ? "свободен" : "занят" }}</span>
         </section>
 
         <section class="content">
             <div class="info-block main-info">
-                <div>Рейтинг: #</div>
-                <div>Стоимость аренды: #</div>
-                <div>Расход топлива: #</div>
+                <div>Рейтинг: {{ plane.rating }} / 5.0</div>
+                <div>Стоимость аренды: {{ plane.rentalCost }} руб/ч</div>
+                <div>Расход топлива: {{ plane.fuelConsumption }} л/ч</div>
                 <div>Дальность полёта при полной заправке: #</div>
-                <div>Объём бака: #</div>
-                <div>Стоимость ТО: #</div>
+                <div>Объём бака: {{ plane.tankCapacity }} л.</div>
+                <div>Стоимость ТО: {{ plane.maintenanceCost }} руб</div>
             </div>
 
             <div class="main-section">
-                <img src="/airplane-example.jpg" width="400px">
+                <img src="/airplane-example.png">
                 <div class="info-block">
-                    <div>Состояние: #</div>
-                    <div>Пробег: #</div>
+                    <div>Состояние: {{ getCondition() }}</div>
+                    <div>Часы налета: {{ plane.mileage }} ч</div>
                     <div>Количество топлива: {{ getFuel() }}</div>
                     <div>Дальность полёта при текущей заправке: #</div>
                 </div>
@@ -66,7 +78,7 @@ onMounted(() => {
         </section>
 
         <section class="center rent-section">
-            <button>Арендовать</button>
+            <button :disabled="!plane.isAvailable" @click="rent">Арендовать</button>
         </section>
     </main>
 </template>
@@ -80,6 +92,7 @@ onMounted(() => {
     border: 2px solid silver;
     padding: 10px;
     text-align: center;
+    box-sizing: border-box;
 }
 
 .content {
@@ -96,6 +109,8 @@ onMounted(() => {
 
 .main-section img {
     margin-bottom: 20px;
+    width: 100%;
+    max-width: 400px;
 }
 
 .info-block {

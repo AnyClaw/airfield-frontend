@@ -46,7 +46,7 @@ async function auth() {
     <Form>
         <div class="center">Вход</div>
         <input v-model="login" placeholder="Логин">
-        <input v-model="password" placeholder="Пароль">
+        <input v-model="password" type="password" placeholder="Пароль">
         <div v-show="errorMessage.length > 0" class="center" style="margin-bottom: 10px;">
             {{ errorMessage }}
         </div>
