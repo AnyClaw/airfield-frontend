@@ -6,6 +6,7 @@ import PlaneInfo from '../views/PlaneInfo.vue'
 import Register from '@/views/Register.vue'
 import PilotProfile from '@/views/PilotProfile.vue'
 import RentalForm from '@/views/RentalForm.vue'
+import MapTest from "@/views/MapTest.vue";
 
 const routes = [
   {
@@ -37,6 +38,11 @@ const routes = [
     path: '/rental/:id',
     name: 'NewRental',
     component: RentalForm
+  },
+  {
+    path: '/map',
+    name: 'Map',
+    component: MapTest
   }
 ]
 
