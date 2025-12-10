@@ -10,6 +10,8 @@ const name = ref('')
 const login = ref('')
 const password = ref('')
 const confirmPassword = ref('')
+const license = ref('')
+const mileage = ref('')
 const isLoading = ref(false)
 const errorMessage = ref('')
 
@@ -33,7 +35,9 @@ async function register() {
         const response = await axios.post('http://localhost:8080/register', {
             username: name.value,
             login: login.value,
-            password: password.value
+            password: password.value,
+            license: license.value,
+            mileage: mileage.value
         })
 
         errorMessage.value = ''
@@ -60,6 +64,8 @@ async function register() {
         <input v-model="login" placeholder="Введите логин">
         <input v-model="password" type="password" placeholder="Введите пароль">
         <input v-model="confirmPassword" type="password" placeholder="Подтвердите пароль">
+        <input v-model="license" type="text" placeholder="Введите номер лицензии">
+        <input v-model="mileage" type="text" placeholder="Введите ваш налёт (в часах)">
         <div v-show="errorMessage.length > 0" class="center" style="margin-bottom: 10px;">
             {{ errorMessage }}
         </div>

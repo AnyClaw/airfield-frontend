@@ -51,7 +51,7 @@ async function checkToken() {
     }   
 
     try {
-        const response = await axios.get('http://localhost:8080/profile', {
+        const response = await axios.get('http://localhost:8080/pilot/profile', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -65,6 +65,16 @@ async function checkToken() {
         }
         else console.log(error)
     }
+}
+
+function timeValidate() {
+    const time = Number(rentalData.value.time)
+
+    if (isNaN(time)) {
+        return false
+    }
+
+    return time > 0
 }
 
 function refuelValidate() {
@@ -116,7 +126,7 @@ onMounted(() => {
             <div class="info-label">Состояние: {{ plane.condition }}</div>
             <div class="param-input">
                 <div>Время полёта (ч):</div>
-                <input type="text" v-model="rentalData.time">
+                <input :class="{'error-input': !timeValidate()}" type="text" v-model="rentalData.time">
             </div>
             <div class="param-input">
                 <div>Количество топлива: {{ plane.fuel }}л / {{ plane.tankCapacity }}л</div>
@@ -136,8 +146,9 @@ onMounted(() => {
             <div class="total-section">
                 Итого: {{ calculateCost() }}
             </div>
+            <label>Ваш баланс: {{ profile.balance }}</label>
             <div class="center">
-            <button>Арендовать самолёт</button>
+            <button :disabled="!(refuelValidate() && timeValidate())">Арендовать самолёт</button>
         </div>
         </section>
     </Form>
