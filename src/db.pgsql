@@ -1,6 +1,6 @@
 DROP TABLE IF EXISTS rentals;
+DROP TABLE IF EXISTS pilot;
 DROP TABLE IF EXISTS planes, users;
-DROP TYPE IF EXISTS user_role, rent_status;
 
 CREATE TABLE IF NOT EXISTS planes (
     id int PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
@@ -22,6 +22,14 @@ CREATE TABLE IF NOT EXISTS users (
     login varchar(50) NOT NULL UNIQUE,
     password varchar(200) NOT NULL,
     role varchar(20) DEFAULT 'PILOT'
+);
+
+CREATE TABLE IF NOT EXISTS pilot (
+    id int PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    id_user int REFERENCES users(id),
+    license varchar(50) NOT NULL UNIQUE,
+    mileage float DEFAULT 0.0,
+    balance money DEFAULT 0.0
 );
 
 CREATE TABLE IF NOT EXISTS rentals (

@@ -19,6 +19,6 @@ main {
     border-radius: 10px;
     background-color: white;
     padding: 5px 10px;
-    margin-top: 200px;
+    margin-top: 5%;
 }
 </style>

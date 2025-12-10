@@ -18,7 +18,7 @@ async function checkToken() {
     }   
 
     try {
-        const response = await axios.get('http://localhost:8080/profile', {
+        const response = await axios.get('http://localhost:8080/pilot/profile', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -48,12 +48,12 @@ onMounted(() => {
             <img style="width: 100%;" src="/pilot-example.jpg">
         </div>
         <div class="info-section">
-            <h1>{{ profile.name }}</h1>
-            <h3>{{ profile.role }}</h3>
-            <div>Логин: {{ profile.login }}</div>
-            <div>Лицензия: #</div>
-            <div>Часы налета: #</div>
-            <div>Баланс: #</div>
+            <h1>{{ profile.user.name }}</h1>
+            <h3>{{ profile.user.role }}</h3>
+            <div>Логин: {{ profile.user.login }}</div>
+            <div>Лицензия: {{ profile.license }}</div>
+            <div>Часы налета: {{ profile.mileage }}</div>
+            <div>Баланс: {{ profile.balance }}</div>
             <button>Пополнить баланс</button>
         </div>
     </section>
