@@ -2,17 +2,57 @@
   <main>
     <div id="grid-container" ref="gridContainer">
       <canvas id="grid-canvas" ref="gridCanvas"></canvas>
-      <div id="waypoints" ref="waypointsRef"></div>
+      <div id="waypoints" ref="waypointsRef">
+        <div
+            v-for="wp in visibleWaypoints"
+            :key="wp.id || wp.name"
+            class="waypoint"
+            :style="{
+              left: (wp.x + translateX) + 'px',
+              top: (wp.y + translateY) + 'px'
+            }"
+        >
+          <div class="waypoint-label">{{ wp.name }}</div>
+        </div>
+      </div>
     </div>
   </main>
 </template>
 
 <script setup>
-import {ref, onMounted, onBeforeUnmount, watch} from 'vue'
+import {ref, onMounted, onBeforeUnmount, reactive, computed} from 'vue'
+  const translateX = ref(0)
+  const translateY = ref(0)
 
   const gridContainer = ref(null)
   const gridCanvas = ref(null)
   const waypointsRef = ref(null)
+
+  const WAYPOINTS = reactive([
+    { name: "Start", x: 0, y: 0 },
+    { name: "Alpha", x: 300, y: -200 },
+    { name: "Beta", x: -400, y: 500 },
+    { name: "Gamma", x: 800, y: 300 }
+  ]);
+  const canvasSize = reactive({ width: 512, height: 512 })
+  const visibleWaypoints = computed(() => {
+    const margin = 200
+    const { width, height } = canvasSize
+    const tx = translateX.value
+    const ty = translateY.value
+
+    return WAYPOINTS.filter(wp => {
+      const screenX = wp.x + tx
+      const screenY = wp.y + ty
+
+      return !(
+          screenX < -margin ||
+          screenX > width + margin ||
+          screenY < -margin ||
+          screenY > height + margin
+      )
+    })
+  })
 
   onMounted(() => {
     // Configuration
@@ -21,84 +61,47 @@ import {ref, onMounted, onBeforeUnmount, watch} from 'vue'
     // DOM, but for Vue
     const container = gridContainer.value;
     const canvas = gridCanvas.value;
-    const ctx = canvas.getContext('2d');
-    const waypointsLayer = waypointsRef.value;
+    const context2d = canvas.getContext('2d');
 
-    // Panning state
-    let translateX = 0;
-    let translateY = 0;
     let isPanning = false;
     let lastX, lastY;
     function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      canvasSize.width = canvas.width = canvas.clientWidth;
+      canvasSize.height = canvas.height = canvas.clientHeight;
+      drawGrid()
     }
-
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas(); // Call once on load
-    const WAYPOINTS = [
-      { name: "Start", x: 0, y: 0 },
-      { name: "Alpha", x: 300, y: -200 },
-      { name: "Beta", x: -400, y: 500 },
-      { name: "Gamma", x: 800, y: 300 }
-    ];
+
     function drawGrid() {
-      const w = canvas.width;
-      const h = canvas.height;
-      ctx.clearRect(0, 0, w, h);
+      const w = canvasSize.width;
+      const h = canvasSize.height;
+      context2d.clearRect(0, 0, w, h);
 
       // Offset so lines move with pan
-      const offsetX = translateX % CELL_SIZE;
-      const offsetY = translateY % CELL_SIZE;
+      const offsetX = translateX.value % CELL_SIZE;
+      const offsetY = translateY.value % CELL_SIZE;
 
-      ctx.strokeStyle = '#ddd';
-      ctx.lineWidth = 1;
+      context2d.strokeStyle = '#ddd';
+      context2d.lineWidth = 1;
 
       // Vertical lines
       for (let x = offsetX; x <= w; x += CELL_SIZE) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, h);
-        ctx.stroke();
+        context2d.beginPath();
+        context2d.moveTo(x, 0);
+        context2d.lineTo(x, h);
+        context2d.stroke();
       }
 
       // Horizontal lines
       for (let y = offsetY; y <= h; y += CELL_SIZE) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(w, y);
-        ctx.stroke();
+        context2d.beginPath();
+        context2d.moveTo(0, y);
+        context2d.lineTo(w, y);
+        context2d.stroke();
       }
-    };
+    }
     drawGrid();
-    watch([translateX, translateY, () => WAYPOINTS.length], renderWaypoints, { deep: true })
-    function renderWaypoints() {
-      waypointsLayer.innerHTML = '';
-      WAYPOINTS.forEach(wp => {
-        const screenX = wp.x + translateX;
-        const screenY = wp.y + translateY;
-
-        // Optional: skip off-screen waypoints (performance)
-        const margin = 200;
-        if (
-            screenX < -margin || screenX > canvas.width + margin ||
-            screenY < -margin || screenY > canvas.height + margin
-        ) return;
-
-        const dot = document.createElement('div');
-        dot.className = 'waypoint';
-        dot.style.left = `${screenX}px`;
-        dot.style.top = `${screenY}px`;
-
-        const label = document.createElement('div');
-        label.className = 'waypoint-label';
-        label.textContent = wp.name;
-
-        dot.appendChild(label);
-        waypointsLayer.appendChild(dot);
-      });
-    };
-    renderWaypoints();
     container.addEventListener('mousedown', (e) => {
       isPanning = true;
       lastX = e.clientX;
@@ -110,12 +113,11 @@ import {ref, onMounted, onBeforeUnmount, watch} from 'vue'
       if (!isPanning) return;
       const dx = e.clientX - lastX;
       const dy = e.clientY - lastY;
-      translateX += dx;
-      translateY += dy;
+      translateX.value += dx;
+      translateY.value += dy;
       lastX = e.clientX;
       lastY = e.clientY;
       drawGrid();
-      renderWaypoints();
     });
 
     window.addEventListener('mouseup', () => {
@@ -131,11 +133,27 @@ main {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin: 0;
+  padding: 10px;
+  box-sizing: border-box;
+  width: auto;
+  height: 100vh;
+}
+
+#grid-container {
+  position: relative;
+  overflow: hidden;
+  font-family: sans-serif;
+  border-radius: 20px;
+  width: 100%;
+  height: 100%;
 }
 
 #grid-canvas {
   display: block;
   background: white;
+  width: 100%;
+  height: 100%;
 }
 
 #waypoints {
