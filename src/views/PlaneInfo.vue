@@ -40,7 +40,7 @@ function getCondition() {
 }
 
 function rent() {
-    router.push({name: 'NewRental', params: {id: plane.value.id}})
+    router.push({name: 'NewRental', params: {planeId: plane.value.id}})
 }
 
 onMounted(() => {

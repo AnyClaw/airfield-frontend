@@ -1,21 +1,23 @@
 <script setup>
 import Header from '@/components/Header.vue';
 import { useRouter } from 'vue-router';
-import { jwtDecode } from 'jwt-decode';
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 
 const router = useRouter()
+
 const profile = ref()
+const rentals = ref()
+
 const isLoading = ref(true)
 
 async function checkToken() {
     const token = localStorage.getItem('authToken')
 
     if (!token) {
-        router.push({name: 'Login'})
+        router.push({ name: 'Login' })
         return
-    }   
+    }
 
     try {
         const response = await axios.get('http://localhost:8080/pilot/profile', {
@@ -25,15 +27,35 @@ async function checkToken() {
         })
 
         profile.value = response.data
-    } catch(error) {
+        findRentals(token)
+    } catch (error) {
         if (error.response?.status === 401) {
             localStorage.removeItem('authToken');
-            router.push({name: 'Login'});
+            router.push({ name: 'Login' });
         }
         else console.log(error)
     }
 
     isLoading.value = false
+}
+
+async function findRentals(token) {
+    try {
+        const response = await axios.get(`http://localhost:8080/rentals/${profile.value.user.id}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        rentals.value = response.data
+    }
+    catch (error) {
+        alert('error')
+        console.log(error)
+    }
+}
+
+function goToRentalInfo(rental) {
+    router.push({name: 'Rental', params: {id: rental.id}})
 }
 
 onMounted(() => {
@@ -42,7 +64,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <Header/>
+    <Header />
     <section class="main-section" v-if="!isLoading">
         <div class="img-section">
             <img style="width: 100%;" src="/pilot-example.jpg">
@@ -58,7 +80,48 @@ onMounted(() => {
         </div>
     </section>
     <section class="history-section">
-        <h1>История аренд</h1>
+        <div class="rental-history" v-if="!isLoading">
+            <h2 class="history-title">История аренд</h2>
+            <ul class="history-list">
+                <li v-for="rental in rentals" @click="goToRentalInfo(rental)">
+                    <article class="card">
+                        <div class="card-header">
+                            <div class="card-header-plane-info">
+                                <div class="plane-icon">✈️</div>
+                                <p class="plane-name">{{ rental.plane.name }}</p>
+                            </div>
+                            <div :class="{ 'status-active': rental.status === 'ACTIVE', }"
+                                class="rental-status status-active">{{ rental.status }}</div>
+                        </div>
+                        <section class="card-main-information">
+                            <div class="flight-route">
+                                <div class="airport">
+                                    <span class="airport-name">{{ rental.arrivalAirport.name }}</span>
+                                    <span class="airport-code">{{ rental.arrivalAirport.icao }}</span>
+                                </div>
+                                <div class="route-arrow">→</div>
+                                <div class="airport">
+                                    <span class="airport-name">{{ rental.departureAirport.name }}</span>
+                                    <span class="airport-code">{{ rental.departureAirport.icao }}</span>
+                                </div>
+                            </div>
+                            <div class="rental-details">
+                                <div class="detail-item">
+                                    <span class="detail-label">Дата вылета:</span>
+                                    <span class="detail-value">{{ rental.startTime }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">
+                                        {{ rental.status === 'ACTIVE' ? 'Текущая точка' : 'Длительность полёта' }}
+                                    </span>
+                                    <span class="detail-value">2 ч 15 мин</span>
+                                </div>
+                            </div>
+                        </section>
+                    </article>
+                </li>
+            </ul>
+        </div>
     </section>
 </template>
 
@@ -76,7 +139,8 @@ onMounted(() => {
     margin-left: 30px;
 }
 
-.info-section h1, h3 {
+.info-section h1,
+h3 {
     text-align: center;
 }
 
@@ -91,13 +155,160 @@ onMounted(() => {
 }
 
 .history-section {
-    margin: 10px 15%;
-    border: 5px solid silver;
-    padding: 20px;
-    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
 }
 
-.history-section h1 {
+.rental-history {
+    width: 70%;
+    background: white;
+    border-radius: 12px;
+    border: 2px solid #808080;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 30px;
+}
+
+.history-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #1E3C72;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #1E90FF;
     text-align: center;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.history-list li {
+    cursor: pointer;
+}
+
+.card {
+    background: #f8f9fa;
+    border-radius: 10px;
+    border: 1px solid #dee2e6;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: #e8f4ff;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.card-header-plane-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.plane-icon {
+    font-size: 24px;
+}
+
+.plane-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1E3C72;
+}
+
+.rental-status {
+    text-transform: uppercase;
+    border-radius: 20px;
+    padding: 6px 15px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.status-active {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.status-completed {
+    background: #6c757d;
+    color: white;
+}
+
+.card-main-information {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 20px;
+    gap: 20px;
+}
+
+.flight-route {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.airport {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.airport-name {
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.airport-code {
+    font-size: 14px;
+    color: #666;
+    background: #dee2e6;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.route-arrow {
+    font-size: 24px;
+    color: #1E90FF;
+    margin: 0 15px;
+}
+
+.rental-details {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px dashed #dee2e6;
+}
+
+.detail-label {
+    font-size: 14px;
+    color: #666;
+}
+
+.cost {
+    color: #28a745;
+    font-size: 18px;
+}
+
+.detail-value {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
 }
 </style>

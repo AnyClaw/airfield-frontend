@@ -36,7 +36,7 @@ const isLoading = ref(true)
 async function getPlane() {
     isLoading.value = true
 
-    const planeId = route.params.id
+    const planeId = route.params.planeId
 
     if (!planeId) {
         router.push({name: 'Planes'})

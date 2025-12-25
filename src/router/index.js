@@ -7,6 +7,7 @@ import Register from '@/views/Register.vue'
 import PilotProfile from '@/views/PilotProfile.vue'
 import RentalForm from '@/views/RentalForm.vue'
 import MapTest from "@/views/MapTest.vue";
+import Rentalnfo from '@/views/Rentalnfo.vue'
 
 const routes = [
   {
@@ -35,7 +36,7 @@ const routes = [
     component: PilotProfile
   },
   {
-    path: '/rental/:id',
+    path: '/new/rental/:planeId',
     name: 'NewRental',
     component: RentalForm
   },
@@ -43,6 +44,11 @@ const routes = [
     path: '/map',
     name: 'Map',
     component: MapTest
+  },
+  {
+    path: '/rental/:id',
+    name: 'Rental',
+    component: Rentalnfo
   }
 ]
 

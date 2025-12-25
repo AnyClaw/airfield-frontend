@@ -93,10 +93,11 @@ CREATE TABLE IF NOT EXISTS rentals (
     end_time TIMESTAMP,
     id_arrival_airport int REFERENCES airport(id),
     id_departure_airport int REFERENCES airport(id),
+    current_stage int DEFAULT 0,
     is_maintenance boolean DEFAULT FALSE,
     maintenance_cost int NOT NULL,
     refuel_cost int NOT NULL,
-    status varchar(10) DEFAULT 'ACTIVE'
+    status varchar(10) DEFAULT 'RENTED'
 );
 
 CREATE TABLE IF NOT EXISTS rental_flight (
@@ -107,7 +108,7 @@ CREATE TABLE IF NOT EXISTS rental_flight (
 );
 
 -- Вставляем waypoints (навигационные точки)
-INSERT INTO waypoint (name, x, y) VALUES 
+INSERT INTO waypoint (name, x, y) VALUES
 -- Основные точки воздушных коридоров
 ('VORON', 100.0, 150.0), -- 1
 ('ROSTA', 180.0, 200.0), -- 2
