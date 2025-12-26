@@ -58,71 +58,120 @@ function goToRentalInfo(rental) {
     router.push({name: 'Rental', params: {id: rental.id}})
 }
 
+function formatDateToDDMMYYYY(dateString) {
+    const date = new Date(dateString);
+    
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    
+    return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
+}
+
+function getCurrentWaypoint(rental) {
+    const stage = rental.currentStage
+
+    if (stage == rental.route.length)
+        return rental.route[stage - 1].toWaypoint.name
+
+    return rental.route[stage].fromWaypoint.name
+}
+
 onMounted(() => {
     checkToken()
 })
 </script>
 
 <template>
-    <Header />
-    <section class="main-section" v-if="!isLoading">
-        <div class="img-section">
-            <img style="width: 100%;" src="/pilot-example.jpg">
-        </div>
-        <div class="info-section">
-            <h1>{{ profile.user.name }}</h1>
-            <h3>{{ profile.user.role }}</h3>
-            <div>Логин: {{ profile.user.login }}</div>
-            <div>Лицензия: {{ profile.license }}</div>
-            <div>Часы налета: {{ profile.mileage }}</div>
-            <div>Баланс: {{ profile.balance }}</div>
-            <button>Пополнить баланс</button>
-        </div>
-    </section>
-    <section class="history-section">
-        <div class="rental-history" v-if="!isLoading">
-            <h2 class="history-title">История аренд</h2>
-            <ul class="history-list">
-                <li v-for="rental in rentals" @click="goToRentalInfo(rental)">
-                    <article class="card">
-                        <div class="card-header">
-                            <div class="card-header-plane-info">
-                                <div class="plane-icon">✈️</div>
-                                <p class="plane-name">{{ rental.plane.name }}</p>
-                            </div>
-                            <div :class="{ 'status-active': rental.status === 'ACTIVE', }"
-                                class="rental-status status-active">{{ rental.status }}</div>
-                        </div>
-                        <section class="card-main-information">
-                            <div class="flight-route">
-                                <div class="airport">
-                                    <span class="airport-name">{{ rental.arrivalAirport.name }}</span>
-                                    <span class="airport-code">{{ rental.arrivalAirport.icao }}</span>
+    <main class="page">
+        <Header />
+        <section class="main-section" v-if="!isLoading">
+            <div class="img-section">
+                <img style="width: 100%;" src="/pilot-example.jpg">
+            </div>
+            <div class="info-section">
+                <h1>{{ profile.user.name }}</h1>
+                <h3>{{ profile.user.role }}</h3>
+                <div>Логин: {{ profile.user.login }}</div>
+                <div>Лицензия: {{ profile.license }}</div>
+                <div>Часы налета: {{ profile.mileage }}</div>
+                <div>Баланс: {{ profile.balance }}</div>
+                <button>Пополнить баланс</button>
+            </div>
+        </section>
+        <section class="history-section">
+            <div class="rental-history" v-if="!isLoading">
+                <h2 class="history-title">История аренд</h2>
+                <ul class="history-list">
+                    <li v-for="rental in rentals" @click="goToRentalInfo(rental)">
+                        <article class="card">
+                            <div class="card-header">
+                                <div class="card-header-plane-info">
+                                    <div class="plane-icon">✈️</div>
+                                    <p class="plane-name">{{ rental.plane.name }}</p>
                                 </div>
-                                <div class="route-arrow">→</div>
-                                <div class="airport">
-                                    <span class="airport-name">{{ rental.departureAirport.name }}</span>
-                                    <span class="airport-code">{{ rental.departureAirport.icao }}</span>
+                                <div :class="{ 
+                                        'status-active': rental.status === 'ACTIVE',
+                                        'status-rented': rental.status === 'RENTED',
+                                        'status-awaiting': rental.status === 'AWAITING_PAYMENT',
+                                        'status-completed': rental.status === 'COMPLETED'
+                                    }" class="rental-status">
+                                    {{ rental.status }}
                                 </div>
                             </div>
-                            <div class="rental-details">
-                                <div class="detail-item">
-                                    <span class="detail-label">Дата вылета:</span>
-                                    <span class="detail-value">{{ rental.startTime }}</span>
+                            <section class="card-main-information">
+                                <div class="flight-route">
+                                    <div class="airport">
+                                        <span class="airport-name">{{ rental.arrivalAirport.name }}</span>
+                                        <span class="airport-code">{{ rental.arrivalAirport.icao }}</span>
+                                    </div>
+                                    <div class="route-arrow">→</div>
+                                    <div class="airport">
+                                        <span class="airport-name">{{ rental.departureAirport.name }}</span>
+                                        <span class="airport-code">{{ rental.departureAirport.icao }}</span>
+                                    </div>
                                 </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">
-                                        {{ rental.status === 'ACTIVE' ? 'Текущая точка' : 'Длительность полёта' }}
-                                    </span>
-                                    <span class="detail-value">2 ч 15 мин</span>
+                                <div class="rental-details">
+                                    <div class="detail-item">
+                                        <span class="detail-label">Начало аренды:</span>
+                                        <span class="detail-value">{{ formatDateToDDMMYYYY(rental.startTime) }}</span>
+                                    </div>
+
+                                    <div v-if="rental.status === 'RENTED'" class="detail-item">
+                                        <span class="detail-label">Стоимость дозаправки:</span>
+                                        <span class="detail-value">{{ rental.refuelCost }}</span>
+                                    </div>
+
+                                    <div v-if="rental.status === 'RENTED'" class="detail-item">
+                                        <span class="detail-label">Стоимость ТО:</span>
+                                        <span class="detail-value">{{ rental.maintenanceCost }}</span>
+                                    </div>
+
+                                    <div v-if="rental.status === 'ACTIVE'" class="detail-item">
+                                        <span class="detail-label">Текущая точка:</span>
+                                        <span class="detail-value">{{ getCurrentWaypoint(rental) }}</span>
+                                    </div>
+
+                                    <div v-if="rental.status === 'AWAITING_PAYMENT' || rental.status === 'COMPLETED'" class="detail-item">
+                                        <span class="detail-label">Конец аренды:</span>
+                                        <span class="detail-value">{{ formatDateToDDMMYYYY(rental.startTime) }}</span>
+                                    </div>
+
+                                    <div v-if="rental.status === 'AWAITING_PAYMENT' || rental.status === 'COMPLETED'" class="detail-item">
+                                        <span class="detail-label">Стоимость аренды:</span>
+                                        <span class="detail-value">{{ rental.totalCost }} руб.</span>
+                                    </div>
                                 </div>
-                            </div>
-                        </section>
-                    </article>
-                </li>
-            </ul>
-        </div>
-    </section>
+                            </section>
+                        </article>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
 </template>
 
 <style scoped>
@@ -133,6 +182,7 @@ onMounted(() => {
     grid-template-columns: 30% 70%;
     padding: 20px;
     box-sizing: border-box;
+    background-color: white;
 }
 
 .info-section {
@@ -229,8 +279,18 @@ h3 {
     font-weight: 700;
 }
 
+.status-rented {
+    background-color: rgb(208, 208, 0);
+    color: black;
+}
+
 .status-active {
     background-color: #28a745;
+    color: #fff;
+}
+
+.status-awaiting {
+    background-color: #a72828;
     color: #fff;
 }
 

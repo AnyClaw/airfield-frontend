@@ -1,7 +1,7 @@
 <script setup>
 import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router'
-
+import Footer from '@/components/Footer.vue';
 import Header from '@/components/Header.vue';
 import { onMounted, ref } from 'vue';
 
@@ -49,90 +49,263 @@ onMounted(() => {
 </script>
 
 <template>
-    <Header/>
-    <main v-if="!isLoading">
-        <section class="name-section">
-            <h1>{{ plane.name }}</h1>
-            <span>{{ plane.isAvailable ? "свободен" : "занят" }}</span>
-        </section>
-
-        <section class="content">
-            <div class="info-block main-info">
-                <div>Рейтинг: {{ plane.rating }} / 5.0</div>
-                <div>Стоимость аренды: {{ plane.rentalCost }} руб/ч</div>
-                <div>Расход топлива: {{ plane.fuelConsumption }} л/ч</div>
-                <div>Дальность полёта при полной заправке: #</div>
-                <div>Объём бака: {{ plane.tankCapacity }} л.</div>
-                <div>Стоимость ТО: {{ plane.maintenanceCost }} руб</div>
-            </div>
-
-            <div class="main-section">
-                <img src="/airplane-example.png">
-                <div class="info-block">
-                    <div>Состояние: {{ getCondition() }}</div>
-                    <div>Часы налета: {{ plane.mileage }} ч</div>
-                    <div>Количество топлива: {{ getFuel() }}</div>
-                    <div>Дальность полёта при текущей заправке: #</div>
+    <body v-if="!isLoading" class="page">
+        <Header/>
+        <main class="main">
+            <div class="name-and-status">
+                <h1 class="plane-name">{{ plane.name }}</h1>
+                <div class="plane-status">
+                    <span :class="{'status-free': plane.isAvailable == true, 'status-busy': plane.isAvailable == false}">
+                        {{ plane.isAvailable ? "свободен" : "занят" }}
+                    </span>
                 </div>
             </div>
-        </section>
+            <div class="plane-content">
+                <div class="specs-section">
+                    <h2 class="section-title">Характеристики</h2>
 
-        <section class="center rent-section">
-            <button :disabled="!plane.isAvailable" @click="rent">Арендовать</button>
-        </section>
-    </main>
+                    <div class="specs-list">
+                        <div class="spec-item">
+                            <span class="spec-label">Рейтинг:</span>
+                            <span class="spec-value">{{ plane.rating }}</span>
+                        </div>
+
+                        <div class="spec-item">
+                            <span class="spec-label">Стоимость аренды:</span>
+                            <span class="spec-value">{{ plane.rentalCost }} руб / 1 км.</span>
+                        </div>
+
+                        <div class="spec-item">
+                            <span class="spec-label">Расход топлива:</span>
+                            <span class="spec-value">{{ plane.fuelConsumption }} л. / 1000 км.</span>
+                        </div>
+
+                        <div class="spec-item">
+                            <span class="spec-label">Объём бака:</span>
+                            <span class="spec-value">{{ plane.tankCapacity }} л</span>
+                        </div>
+
+                        <div class="spec-item">
+                            <span class="spec-label">Стоимость ТО:</span>
+                            <span class="spec-value">{{ plane.maintenanceCost }} руб.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="image-section">
+                    <img src="/plane-3.jpg" class="plane-photo">
+                </div>
+
+                <div class="status-section">
+                    <h2 class="section-title">Состояние</h2>
+
+                    <div class="status-list">
+                        <div class="status-item">
+                            <span class="status-label">Состояние:</span>
+                            <span class="status-value">{{ plane.condition }}</span>
+                            <span class="status-note">{{ plane.condition === 'POOR' ? 'требуется ТО' : 'ТО не требуется' }}</span>
+                        </div>
+
+                        <div class="status-item">
+                            <span class="status-label">Пробег:</span>
+                            <span class="status-value">{{ plane.mileage }} км.</span>
+                        </div>
+
+                        <div class="status-item" :class="{'warning': plane.fuel == 0}">
+                            <span class="status-label">Количество топлива:</span>
+                            <span class="status-value">{{ plane.fuel }} л.</span>
+                            <span v-if="plane.fuel == 0" class="status-note">необходима заправка</span>
+                        </div>
+                    </div>
+
+                    <div class="rent-section">
+                        <button class="rent-button" v-show="plane.isAvailable" @click="rent">Арендовать</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <Footer></Footer>
+    </body>
 </template>
 
 <style scoped>
-.name-section {
+.main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 25px;
+    margin-bottom: 50px;
+}
+
+.name-and-status {
+    margin-bottom: 25px;
+}
+
+.plane-name {
+    text-align: center;
+    font-size: 32px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 10px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.plane-status {
+    text-align: center;
+}
+
+.status-free {
+    display: inline-block;
+    background-color: #4CAF50;
+    color: white;
+    padding: 6px 16px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.status-busy {
+    display: inline-block;
+    background-color: #a72828;
+    color: white;
+    padding: 6px 16px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.plane-content {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 40px;
+    background: white;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #1E90FF;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee;
+}
+
+.specs-list {
     display: flex;
     flex-direction: column;
-    width: 100%;
-    margin-bottom: 10px;
-    border: 2px solid silver;
-    padding: 10px;
-    text-align: center;
-    box-sizing: border-box;
+    gap: 16px;
 }
 
-.content {
-    display: grid;
-    grid-template-columns: 30% 70%;
-    padding: 20px;
+.spec-item {
+    padding: 12px;
+    background: #f8f9fa;
+    border-left: 4px solid #1E90FF;
+    border-radius: 4px;
 }
 
-.main-section {
+.spec-label {
+    display: block;
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+
+.spec-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #222;
+}
+
+.spec-note {
+    display: block;
+    font-size: 12px;
+    color: #777;
+    margin-top: 4px;
+}
+
+.image-section {
     display: flex;
     align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.plane-photo {
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: contain;
+    display: block;
+    border-radius: 8px;
+    border: 2px solid #ddd;
+}
+
+.status-list {
+    display: flex;
     flex-direction: column;
+    gap: 16px;
+    margin-bottom: 30px;
 }
 
-.main-section img {
-    margin-bottom: 20px;
-    width: 100%;
-    max-width: 400px;
+.status-item {
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border-left: 4px solid #1E90FF;
 }
 
-.info-block {
-    width: 100%;
-    padding: 10px;
-    box-sizing: border-box;
+.status-item.warning {
+    border-left-color: #ff9800;
+    background: #fff8e1;
 }
 
-.info-block * {
-    margin-bottom: 1%;
+.status-label {
+    display: block;
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 4px;
+    font-size: 14px;
 }
 
-.main-info {
-    border: 2px solid silver;
-    border-radius: 5px;
+.status-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #222;
+}
+
+.status-item.warning .status-value {
+    color: #d32f2f;
+}
+
+.status-note {
+    display: block;
+    font-size: 12px;
+    color: #777;
+    margin-top: 4px;
 }
 
 .rent-section {
-    margin: 20px 0  ;
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
 }
 
-.rent-section button {
-    font-size: 40px;
+.rent-button {
+    background-color: #1E90FF;
+    color: white;
+    border: none;
+    padding: 14px 40px;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.rent-button:hover {
+    background-color: #0066CC;
 }
 </style>

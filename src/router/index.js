@@ -8,6 +8,10 @@ import PilotProfile from '@/views/PilotProfile.vue'
 import RentalForm from '@/views/RentalForm.vue'
 import MapTest from "@/views/MapTest.vue";
 import Rentalnfo from '@/views/Rentalnfo.vue'
+import AccountantProfile from '@/views/AccountantProfile.vue'
+import Rentals from '@/views/Rentals.vue'
+import AdminProfile from '@/views/AdminProfile.vue'
+import PlaneForm from '@/views/PlaneForm.vue'
 
 const routes = [
   {
@@ -34,6 +38,26 @@ const routes = [
     path: '/profile',
     name: 'Profile',
     component: PilotProfile
+  },
+  {
+    path: '/accountant/profile',
+    name: 'AccountantProfile',
+    component: AccountantProfile
+  },
+  {
+    path: '/accountant/rentals',
+    name: 'RentalsList',
+    component: Rentals
+  },
+  {
+    path: '/admin/profile',
+    name: 'AdminProfile',
+    component: AdminProfile
+  },
+  {
+    path: '/admin/plane/add',
+    name: 'PlaneForm',
+    component: PlaneForm
   },
   {
     path: '/new/rental/:planeId',

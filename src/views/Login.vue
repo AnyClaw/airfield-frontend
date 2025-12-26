@@ -42,18 +42,20 @@ async function auth() {
 </script>
 
 <template>
-    <Header/>
-    <Form>
-        <div class="center">Вход</div>
-        <input v-model="login" placeholder="Логин">
-        <input v-model="password" type="password" placeholder="Пароль">
-        <div v-show="errorMessage.length > 0" class="center" style="margin-bottom: 10px;">
-            {{ errorMessage }}
-        </div>
-        <div class="center">
-            <button @click="auth" :disabled="isLoading">Войти</button>
-        </div>
-    </Form>
+    <main class="page">
+        <Header/>
+        <Form>
+            <div class="center">Вход</div>
+            <input v-model="login" placeholder="Логин">
+            <input v-model="password" type="password" placeholder="Пароль">
+            <div v-show="errorMessage.length > 0" class="center" style="margin-bottom: 10px;">
+                {{ errorMessage }}
+            </div>
+            <div class="center">
+                <button @click="auth" :disabled="isLoading">Войти</button>
+            </div>
+        </Form>
+    </main>
 </template>
 
 <style scoped>

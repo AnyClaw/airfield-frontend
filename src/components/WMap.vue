@@ -1,11 +1,27 @@
 <template>
-  <main>
+  <main class="map-container">
     <div id="grid-container" ref="gridContainer">
       <canvas id="grid-canvas" ref="gridCanvas"></canvas>
+      
+      <!-- SVG для маршрутов -->
+      <svg id="routes-svg" ref="routesSvg">
+        <!-- Маршруты -->
+        <line
+            v-for="route in computedRoutes"
+            :key="route.id"
+            :x1="route.x1 + translateX"
+            :y1="route.y1 + translateY"
+            :x2="route.x2 + translateX"
+            :y2="route.y2 + translateY"
+            stroke="#1976d2"
+            stroke-width="2"
+        />
+      </svg>
+      
       <div id="waypoints" ref="waypointsRef">
         <div
-            v-for="wp in visibleWaypoints"
-            :key="wp.id || wp.name"
+            v-for="wp in WAYPOINTS"
+            :key="wp.id"
             class="waypoint"
             :style="{
               left: (wp.x + translateX) + 'px',
@@ -20,133 +36,279 @@
 </template>
 
 <script setup>
-import {ref, onMounted, onBeforeUnmount, reactive, computed} from 'vue'
-  const translateX = ref(0)
-  const translateY = ref(0)
+import {ref, onMounted, reactive, computed, defineProps} from 'vue'
 
-  const gridContainer = ref(null)
-  const gridCanvas = ref(null)
-  const waypointsRef = ref(null)
+// Определяем входные параметры
+const props = defineProps({
+  // Старый формат: массив { fromId, toId }
+  routes: {
+    type: Array,
+    default: () => []
+  },
+  // Новый формат: массив ваших объектов
+  routeData: {
+    type: Array,
+    default: () => []
+  },
+  height: {
+    type: String,
+    default: '70vh'
+  }
+})
 
-  const WAYPOINTS = reactive([
-    { name: "Start", x: 0, y: 0 },
-    { name: "Alpha", x: 300, y: -200 },
-    { name: "Beta", x: -400, y: 500 },
-    { name: "Gamma", x: 800, y: 300 }
-  ]);
-  const canvasSize = reactive({ width: 512, height: 512 })
-  const visibleWaypoints = computed(() => {
-    const margin = 200
-    const { width, height } = canvasSize
-    const tx = translateX.value
-    const ty = translateY.value
+const translateX = ref(0)
+const translateY = ref(0)
+const gridContainer = ref(null)
+const gridCanvas = ref(null)
+const waypointsRef = ref(null)
+const routesSvg = ref(null)
 
-    return WAYPOINTS.filter(wp => {
-      const screenX = wp.x + tx
-      const screenY = wp.y + ty
+// Точки с координатами (можно также сделать параметром)
+const WAYPOINTS = reactive([
+    { id: 1, name: "VORON", x: 100.0, y: 150.0 },
+    { id: 2, name: "ROSTA", x: 180.0, y: 200.0 },
+    { id: 3, name: "BELKA", x: 250.0, y: 300.0 },
+    { id: 4, name: "STREL", x: 350.0, y: 400.0 },
+    { id: 5, name: "VETKA", x: 450.0, y: 350.0 },
+    { id: 6, name: "KEDR", x: 300.0, y: 200.0 },
+    { id: 7, name: "BUKET", x: 400.0, y: 250.0 },
+    { id: 8, name: "OMEGA", x: 500.0, y: 300.0 },
+    { id: 9, name: "ALPHA", x: 150.0, y: 400.0 },
+    { id: 10, name: "BRAVO", x: 280.0, y: 450.0 },
+    { id: 11, name: "CHARL", x: 420.0, y: 500.0 },
+    { id: 12, name: "DELTA", x: 550.0, y: 450.0 },
+    { id: 13, name: "ECHO", x: 600.0, y: 350.0 },
+    { id: 14, name: "FOXT", x: 650.0, y: 250.0 },
+    { id: 15, name: "GOLF", x: 200.0, y: 100.0 }
+])
 
-      return !(
-          screenX < -margin ||
-          screenX > width + margin ||
-          screenY < -margin ||
-          screenY > height + margin
-      )
-    })
-  })
+// Маршруты по умолчанию (если не переданы через props)
+const defaultRoutes = [
+    // Основные маршруты
+    { fromId: 1, toId: 2 },
+    { fromId: 1, toId: 15 },
+    { fromId: 2, toId: 15 },
+    { fromId: 2, toId: 3 },
+    { fromId: 2, toId: 6 },
+    { fromId: 3, toId: 9 },
+    { fromId: 3, toId: 4 },
+    { fromId: 9, toId: 10 },
+    { fromId: 4, toId: 10 },
+    { fromId: 4, toId: 11 },
+    { fromId: 4, toId: 5 },
+    { fromId: 11, toId: 12 },
+    { fromId: 12, toId: 13 },
+    { fromId: 13, toId: 5 },
+    { fromId: 5, toId: 8 },
+    { fromId: 5, toId: 7 },
+    { fromId: 7, toId: 8 },
+    { fromId: 7, toId: 6 },
+    { fromId: 8, toId: 14 },
+    
+    // Обратные маршруты
+    { fromId: 2, toId: 1 },
+    { fromId: 15, toId: 1 },
+    { fromId: 15, toId: 2 },
+    { fromId: 3, toId: 2 },
+    { fromId: 6, toId: 2 },
+    { fromId: 9, toId: 3 },
+    { fromId: 4, toId: 3 },
+    { fromId: 10, toId: 9 },
+    { fromId: 10, toId: 4 },
+    { fromId: 11, toId: 4 },
+    { fromId: 5, toId: 4 },
+    { fromId: 12, toId: 11 },
+    { fromId: 13, toId: 12 },
+    { fromId: 5, toId: 13 },
+    { fromId: 8, toId: 5 },
+    { fromId: 7, toId: 5 },
+    { fromId: 8, toId: 7 },
+    { fromId: 6, toId: 7 },
+    { fromId: 14, toId: 8 }
+]
 
-  onMounted(() => {
-    // Configuration
-    const CELL_SIZE = 50;
+// Используем переданные маршруты или маршруты по умолчанию
+const activeRoutes = computed(() => {
+  return props.routes.length > 0 ? props.routes : defaultRoutes
+})
 
-    // DOM, but for Vue
-    const container = gridContainer.value;
-    const canvas = gridCanvas.value;
-    const context2d = canvas.getContext('2d');
-
-    let isPanning = false;
-    let lastX, lastY;
-    function resizeCanvas() {
-      canvasSize.width = canvas.width = canvas.clientWidth;
-      canvasSize.height = canvas.height = canvas.clientHeight;
-      drawGrid()
+// Вычисляемое свойство для маршрутов с координатами
+const computedRoutes = computed(() => {
+    // Если передан routeData (ваш формат)
+    if (props.routeData.length > 0) {
+        return props.routeData.map(route => {
+            return {
+                id: route.id,
+                x1: route.fromWaypoint.x,
+                y1: route.fromWaypoint.y,
+                x2: route.toWaypoint.x,
+                y2: route.toWaypoint.y,
+                fromName: route.fromWaypoint.name,
+                toName: route.toWaypoint.name,
+                distance: route.distance
+            }
+        })
     }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas(); // Call once on load
+    
+    // Если передан routes (старый формат)
+    if (props.routes.length > 0) {
+        return props.routes.map(route => {
+            const from = WAYPOINTS.find(w => w.id === route.fromId)
+            const to = WAYPOINTS.find(w => w.id === route.toId)
+            
+            if (from && to) {
+                return {
+                    id: `${route.fromId}-${route.toId}`,
+                    x1: from.x,
+                    y1: from.y,
+                    x2: to.x,
+                    y2: to.y,
+                    fromName: from.name,
+                    toName: to.name
+                }
+            }
+            return null
+        }).filter(route => route !== null)
+    }
+    
+    // Если ничего не передано, используем маршруты по умолчанию
+    return defaultRoutes.map(route => {
+        const from = WAYPOINTS.find(w => w.id === route.fromId)
+        const to = WAYPOINTS.find(w => w.id === route.toId)
+        
+        if (from && to) {
+            return {
+                id: `${route.fromId}-${route.toId}`,
+                x1: from.x,
+                y1: from.y,
+                x2: to.x,
+                y2: to.y,
+                fromName: from.name,
+                toName: to.name
+            }
+        }
+        return null
+    }).filter(route => route !== null)
+})
+
+const canvasSize = reactive({ width: 512, height: 512 })
+
+onMounted(() => {
+    const CELL_SIZE = 50
+    const container = gridContainer.value
+    const canvas = gridCanvas.value
+    const context2d = canvas.getContext('2d')
+    const svg = routesSvg.value
+
+    let isPanning = false
+    let lastX, lastY
+
+    function resizeCanvas() {
+        canvasSize.width = canvas.width = container.clientWidth
+        canvasSize.height = canvas.height = container.clientHeight
+        
+        if (svg) {
+            svg.setAttribute('width', canvasSize.width)
+            svg.setAttribute('height', canvasSize.height)
+        }
+        
+        drawGrid()
+    }
+
+    window.addEventListener('resize', resizeCanvas)
+    resizeCanvas()
 
     function drawGrid() {
-      const w = canvasSize.width;
-      const h = canvasSize.height;
-      context2d.clearRect(0, 0, w, h);
+        const w = canvasSize.width
+        const h = canvasSize.height
+        context2d.clearRect(0, 0, w, h)
 
-      // Offset so lines move with pan
-      const offsetX = translateX.value % CELL_SIZE;
-      const offsetY = translateY.value % CELL_SIZE;
+        const offsetX = translateX.value % CELL_SIZE
+        const offsetY = translateY.value % CELL_SIZE
 
-      context2d.strokeStyle = '#ddd';
-      context2d.lineWidth = 1;
+        context2d.strokeStyle = '#f0f0f0'
+        context2d.lineWidth = 1
 
-      // Vertical lines
-      for (let x = offsetX; x <= w; x += CELL_SIZE) {
-        context2d.beginPath();
-        context2d.moveTo(x, 0);
-        context2d.lineTo(x, h);
-        context2d.stroke();
-      }
+        // Вертикальные линии
+        for (let x = offsetX; x <= w; x += CELL_SIZE) {
+            context2d.beginPath()
+            context2d.moveTo(x, 0)
+            context2d.lineTo(x, h)
+            context2d.stroke()
+        }
 
-      // Horizontal lines
-      for (let y = offsetY; y <= h; y += CELL_SIZE) {
-        context2d.beginPath();
-        context2d.moveTo(0, y);
-        context2d.lineTo(w, y);
-        context2d.stroke();
-      }
+        // Горизонтальные линии
+        for (let y = offsetY; y <= h; y += CELL_SIZE) {
+            context2d.beginPath()
+            context2d.moveTo(0, y)
+            context2d.lineTo(w, y)
+            context2d.stroke()
+        }
+        
+        // Более темные линии каждые 5 клеток
+        context2d.strokeStyle = '#ddd'
+        context2d.lineWidth = 1.5
+        
+        for (let x = offsetX; x <= w; x += CELL_SIZE * 5) {
+            context2d.beginPath()
+            context2d.moveTo(x, 0)
+            context2d.lineTo(x, h)
+            context2d.stroke()
+        }
+        
+        for (let y = offsetY; y <= h; y += CELL_SIZE * 5) {
+            context2d.beginPath()
+            context2d.moveTo(0, y)
+            context2d.lineTo(w, y)
+            context2d.stroke()
+        }
     }
-    drawGrid();
+
     container.addEventListener('mousedown', (e) => {
-      isPanning = true;
-      lastX = e.clientX;
-      lastY = e.clientY;
-      e.preventDefault();
-    });
+        isPanning = true
+        lastX = e.clientX
+        lastY = e.clientY
+        e.preventDefault()
+    })
 
     window.addEventListener('mousemove', (e) => {
-      if (!isPanning) return;
-      const dx = e.clientX - lastX;
-      const dy = e.clientY - lastY;
-      translateX.value += dx;
-      translateY.value += dy;
-      lastX = e.clientX;
-      lastY = e.clientY;
-      drawGrid();
-    });
+        if (!isPanning) return
+        const dx = e.clientX - lastX
+        const dy = e.clientY - lastY
+        translateX.value += dx
+        translateY.value += dy
+        lastX = e.clientX
+        lastY = e.clientY
+        drawGrid()
+    })
 
     window.addEventListener('mouseup', () => {
-      isPanning = false;
-    });
-  })
-
-
+        isPanning = false
+    })
+})
 </script>
 
 <style scoped>
-main {
+.map-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 0;
+  margin: 20px auto;
   padding: 10px;
   box-sizing: border-box;
-  width: auto;
-  height: 100vh;
+  width: 90%;
+  max-width: 1200px;
+  height: v-bind(height); /* Используем переданную высоту */
 }
 
 #grid-container {
   position: relative;
   overflow: hidden;
   font-family: sans-serif;
-  border-radius: 20px;
+  border-radius: 10px;
   width: 100%;
   height: 100%;
+  border: 1px solid #ccc;
 }
 
 #grid-canvas {
@@ -156,13 +318,24 @@ main {
   height: 100%;
 }
 
+#routes-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
 #waypoints {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  pointer-events: none; /* So canvas gets pan events */
+  pointer-events: none;
+  z-index: 2;
 }
 
 .waypoint {
@@ -173,7 +346,9 @@ main {
   border: 2px solid white;
   border-radius: 50%;
   transform: translate(-50%, -50%);
-  pointer-events: auto; /* Allow interaction if needed */
+  pointer-events: auto;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .waypoint-label {
@@ -186,5 +361,9 @@ main {
   color: #1976d2;
   white-space: nowrap;
   text-shadow: 1px 1px 2px white;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 2px 6px;
+  border-radius: 3px;
+  pointer-events: none;
 }
 </style>

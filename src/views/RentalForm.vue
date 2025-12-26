@@ -4,6 +4,7 @@ import Form from '@/components/Form.vue';
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
+import Footer from '@/components/Footer.vue';
 
 const route = useRoute()
 const router = useRouter()
@@ -176,7 +177,7 @@ async function rent() {
         const response = await axios.post('http://localhost:8080/rent', rentalData.value, {
             headers: {
                 'Authorization': `Bearer ${token}`
-            },
+            }
         })
         console.log(response.data)
     }
@@ -193,61 +194,65 @@ onMounted(() => {
 </script>
 
 <template>
-    <Header/>
-    <Form>
-        <h1>Форма для аренды самолёта</h1>
-        <section v-if="!isLoading && profile != null" class="content">
-            <div class="info-label">
-                Самолёт: <label style="cursor: pointer;">{{ plane.name }}</label>
-            </div>
-            <div class="info-label">Состояние: {{ plane.condition }}</div>
-
-            <div class="param-input-button">
-                <div>ICAO аэропорта вылета: </div>
-                <input :class="{'error-input': !isArrivalIcaoValid}" type="text" v-model="arrivalICAO">
-                <button @click="getArrivalAirport">Найти аэропорт</button>
-            </div>
-            <div class="param-input-button">
-                <div>ICAO аэропорта прилёта: </div>
-                <input :class="{'error-input': !isDepartureIcaoValid}" type="text" v-model="departureICAO">
-                <button @click="getDepartureAirport">Найти аэропорт</button>
-            </div>
-
-            <div class="param-input" v-if="rentalData.flightRoute.length == 0">
-                <button @click="buildRoute" :disabled="!(isArrivalIcaoValid && isDepartureIcaoValid)">Построить маршрут</button>
-            </div>
-            <div v-else>
-                <div class="param-input">Маршрут: {{ getFlightRoute() }}</div>
-                <div class="param-input">Дистанция полёта: {{ rentalData.distance }} км.</div>
-            </div>
-            
-
-            <div class="param-input">
-                <div>Количество топлива: {{ plane.fuel }}л / {{ plane.tankCapacity }}л</div>
-            </div>
-            <div class="param-checkbox">
-                <label>Заправить?</label>
-                <input class="checkbox" type="checkbox" v-model="isRefuel">
-            </div>
-            <div v-if="isRefuel">
-                <div class="param-input">
-                    <label>Количество топлива (л): </label>
-                    <input :class="{'error-input': !refuelValidate()}" type="text" v-model="rentalData.refuel">
+    
+    <main class="page">
+        <Header/>
+        <Form>
+            <h1>Форма для аренды самолёта</h1>
+            <section v-if="!isLoading && profile != null" class="content">
+                <div class="info-label">
+                    Самолёт: <label style="cursor: pointer;">{{ plane.name }}</label>
                 </div>
-                <label>Стоимость заправки: {{ refuelValidate() ? refuelCost() : 0 }}</label>
-            </div>
-            <div class="param-checkbox" v-if="plane.condition !== 'EXCELLENT'">
-                <label>Провести ТО?</label>
-                <input class="checkbox" type="checkbox" v-model="rentalData.maintenance">
-            </div>
-            <label>Стоимость ТО: {{ rentalData.maintenanceCost }}</label>
-            <div class="center">
-                <button :disabled="!(refuelValidate() && isArrivalIcaoValid && isDepartureIcaoValid)" @click="rent">
-                    Арендовать самолёт
-                </button>
-            </div>
-        </section>
-    </Form>
+                <div class="info-label">Состояние: {{ plane.condition }}</div>
+
+                <div class="param-input-button">
+                    <div>ICAO аэропорта вылета: </div>
+                    <input :class="{'error-input': !isArrivalIcaoValid}" type="text" v-model="arrivalICAO">
+                    <button @click="getArrivalAirport">Найти аэропорт</button>
+                </div>
+                <div class="param-input-button">
+                    <div>ICAO аэропорта прилёта: </div>
+                    <input :class="{'error-input': !isDepartureIcaoValid}" type="text" v-model="departureICAO">
+                    <button @click="getDepartureAirport">Найти аэропорт</button>
+                </div>
+
+                <div class="param-input" v-if="rentalData.flightRoute.length == 0">
+                    <button @click="buildRoute" :disabled="!(isArrivalIcaoValid && isDepartureIcaoValid)">Построить маршрут</button>
+                </div>
+                <div v-else>
+                    <div class="param-input">Маршрут: {{ getFlightRoute() }}</div>
+                    <div class="param-input">Дистанция полёта: {{ rentalData.distance }} км.</div>
+                </div>
+                
+
+                <div class="param-input">
+                    <div>Количество топлива: {{ plane.fuel }}л / {{ plane.tankCapacity }}л</div>
+                </div>
+                <div class="param-checkbox">
+                    <label>Заправить?</label>
+                    <input class="checkbox" type="checkbox" v-model="isRefuel">
+                </div>
+                <div v-if="isRefuel">
+                    <div class="param-input">
+                        <label>Количество топлива (л): </label>
+                        <input :class="{'error-input': !refuelValidate()}" type="text" v-model="rentalData.refuel">
+                    </div>
+                    <label>Стоимость заправки: {{ refuelValidate() ? refuelCost() : 0 }}</label>
+                </div>
+                <div class="param-checkbox" v-if="plane.condition !== 'EXCELLENT'">
+                    <label>Провести ТО?</label>
+                    <input class="checkbox" type="checkbox" v-model="rentalData.maintenance">
+                </div>
+                <label>Стоимость ТО: {{ rentalData.maintenanceCost }}</label>
+                <div class="center">
+                    <button :disabled="!(refuelValidate() && isArrivalIcaoValid && isDepartureIcaoValid)" @click="rent">
+                        Арендовать самолёт
+                    </button>
+                </div>
+            </section>
+        </Form>
+        <Footer></Footer>
+    </main>
 </template>
 
 <style scoped>

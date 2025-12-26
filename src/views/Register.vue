@@ -44,7 +44,6 @@ async function register() {
 
         isLoading.value = false
 
-        //TODO всплывашку
         alert('Успешная регистрация!')
 
         router.push({name: 'Planes'})
@@ -57,24 +56,26 @@ async function register() {
 </script>
 
 <template>
-    <Header/>
-    <Form>
-        <div class="center">Регистрация</div>
-        <input v-model="name" placeholder="Введите имя">
-        <input v-model="login" placeholder="Введите логин">
-        <input v-model="password" type="password" placeholder="Введите пароль">
-        <input v-model="confirmPassword" type="password" placeholder="Подтвердите пароль">
-        <input v-model="license" type="text" placeholder="Введите номер лицензии">
-        <input v-model="mileage" type="text" placeholder="Введите ваш налёт (в часах)">
-        <div v-show="errorMessage.length > 0" class="center" style="margin-bottom: 10px;">
-            {{ errorMessage }}
-        </div>
-        <div class="center">
-            <button :disabled="isLoading" @click="register">
-                Зарегестрироваться
-            </button>
-        </div>
-    </Form>
+    <main class="page">
+        <Header/>
+        <Form>
+            <div class="center">Регистрация</div>
+            <input v-model="name" placeholder="Введите имя">
+            <input v-model="login" placeholder="Введите логин">
+            <input v-model="password" type="password" placeholder="Введите пароль">
+            <input v-model="confirmPassword" type="password" placeholder="Подтвердите пароль">
+            <input v-model="license" type="text" placeholder="Введите номер лицензии">
+            <input v-model="mileage" type="text" placeholder="Введите ваш налёт (в часах)">
+            <div v-show="errorMessage.length > 0" class="center" style="margin-bottom: 10px;">
+                {{ errorMessage }}
+            </div>
+            <div class="center">
+                <button :disabled="isLoading" @click="register">
+                    Зарегестрироваться
+                </button>
+            </div>
+        </Form>
+    </main>
 </template>
 
 <style scoped>
