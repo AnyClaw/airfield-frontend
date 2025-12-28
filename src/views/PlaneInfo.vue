@@ -32,11 +32,8 @@ function getFuel() {
     return `${plane.value.fuel} л.`
 }
 
-function getCondition() {
-    if (plane.value.condition === 'POOR') return `${plane.value.condition} (необходимо ТО)`
-    if (plane.value.condition === 'FAIR') return `${plane.value.condition} (рекомендуется ТО)`
-
-    return plane.value.condition
+function handleImageError(event) {
+  event.target.src = '/plane-example.jpg';
 }
 
 function rent() {
@@ -93,7 +90,12 @@ onMounted(() => {
                 </div>
 
                 <div class="image-section">
-                    <img src="/plane-3.jpg" class="plane-photo">
+                    <img 
+                      :src="`/plane${plane.id}.jpg`" 
+                      :alt="plane.name" 
+                      class="plane-photo"
+                      @error="handleImageError"
+                    >
                 </div>
 
                 <div class="status-section">

@@ -26,8 +26,11 @@ async function getAirplanes() {
 }
 
 async function goToPlaneInfo(plane) {
-  // const data = JSON.stringify(plane)
   router.push({name: 'PlaneInfo', params: {id: plane.id}})
+}
+
+function handleImageError(event) {
+  event.target.src = '/plane-example.jpg';
 }
 
 onMounted(() => {
@@ -43,7 +46,12 @@ onMounted(() => {
         <section class="cards">
             <ul class="cards-list">
                 <li class="card" v-for="plane in airplanes" :key="plane.id">
-                    <img src="/plane-3.jpg" alt="прогулочный самолёт" class="plane-image">
+                    <img 
+                      :src="`/plane${plane.id}.jpg`" 
+                      :alt="plane.name" 
+                      class="plane-image"
+                      @error="handleImageError"
+                    >
                     <h3 class="cards__title">{{ plane.name }}</h3>
                     <h3 class="cards__title">{{ plane.isAvailable ? 'Свободен' : 'Занят' }}</h3>
                     <button class="card__button" @click="goToPlaneInfo(plane)"> Подробнее </button>
